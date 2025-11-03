@@ -12,13 +12,18 @@ from typing import List, Dict, Tuple
 import logging
 import uuid
 from sentence_transformers import CrossEncoder
+import json
+import os
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 CORS(app)
 
 # 全局变量存储对话历史和数据库名
-conversations: Dict[str, Tuple[str, List[Dict[str, str]]]] = {} # (title, history_list)
-db_name = None
+history: List[Dict[str, str]] = []
+db_name = "student_Group4_final"  # 固定的数据库名称
 
 print("⏳ 正在加载二次检索模型 (Re-ranker)...")
 try:
@@ -35,7 +40,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', # 定义日志行的格式
     encoding='utf-8' # 确保中文日志（如敏感词）不会乱码
 )
-
 
 client = APIClient()
 
@@ -72,55 +76,209 @@ def rerank_documents(query: str, documents: List[Dict], model: CrossEncoder, top
     
     return reranked_docs[:top_n]
 
-def initialize_database():
-    """初始化数据库"""
+def load_json_files(directory='json_files'):
+    """从指定目录加载JSON文件 - 适配用户提供的格式，包含 description 字段处理"""
+    files = []
+    print(f"🔍 正在扫描目录: {directory}")
+    
+    if not os.path.exists(directory):
+        print(f"❌ 目录 {directory} 不存在")
+        return files
+    
+    json_files = [f for f in os.listdir(directory) if f.endswith('.json')]
+    print(f"📄 找到 {len(json_files)} 个JSON文件: {json_files}")
+    
+    for filename in json_files:
+        filepath = os.path.join(directory, filename)
+        print(f"📖 正在处理文件: {filename}")
+        
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                json_data = json.load(f)
+            
+            print(f"✅ JSON文件 {filename} 解析成功，数据类型: {type(json_data)}")
+            
+            # 适配用户提供的格式：使用"file"字段而不是"content"
+            if isinstance(json_data, dict):
+                # 检查是否是单个文档格式
+                if 'concept' in json_data:
+                    content = json_data.get('concept', '')
+                    # 直接使用用户提供的metadata，如果没有则创建一个包含文件名的metadata
+                    metadata = json_data.get('metadata', {'source': filename})
+                    
+                    # ✅ 新增：将 description 添加到 metadata 中
+                    if 'description' in json_data:
+                        # 确保 metadata 是字典类型
+                        if not isinstance(metadata, dict):
+                            metadata = {'source': filename}
+                        metadata['description'] = json_data['description']
+                    
+                    if content:
+                        files.append({
+                            "file": content,  # 保持原字段名
+                            "metadata": metadata  # 现在包含 description
+                        })
+                        print(f"✅ 成功提取内容，长度: {len(content)} 字符")
+                        print(f"📋 Metadata字段: {list(metadata.keys())}")
+                    else:
+                        print(f"⚠️ 警告: 文件 {filename} 中没有找到concept字段或内容为空")
+                # 检查是否是传统格式（兼容性）
+                elif 'content' in json_data:
+                    content = json_data.get('content', '')
+                    metadata = json_data.get('metadata', {'source': filename})
+                    
+                    # ✅ 新增：如果存在description，也添加到metadata
+                    if 'description' in json_data:
+                        if not isinstance(metadata, dict):
+                            metadata = {'source': filename}
+                        metadata['description'] = json_data['description']
+                    
+                    if content:
+                        files.append({
+                            "file": content,  # 转换为统一格式
+                            "metadata": metadata
+                        })
+                        print(f"✅ 成功提取内容（传统格式），长度: {len(content)} 字符")
+                    else:
+                        print(f"⚠️ 警告: 文件 {filename} 中没有找到content字段或内容为空")
+                else:
+                    print(f"❌ 错误: 文件 {filename} 格式不支持，未找到concept或content字段")
+                    
+            elif isinstance(json_data, list):
+                print(f"📋 文件 {filename} 包含 {len(json_data)} 个文档")
+                for i, item in enumerate(json_data):
+                    if isinstance(item, dict):
+                        # 优先使用concept字段
+                        if 'concept' in item:
+                            content = item.get('concept', '')
+                            metadata = item.get('metadata', {'source': f"{filename}_{i}"})
+                            
+                            # ✅ 新增：将 description 添加到 metadata 中
+                            if 'description' in item:
+                                if not isinstance(metadata, dict):
+                                    metadata = {'source': f"{filename}_{i}"}
+                                metadata['description'] = item['description']
+                        elif 'content' in item:
+                            content = item.get('content', '')
+                            metadata = item.get('metadata', {'source': f"{filename}_{i}"})
+                            
+                            # ✅ 新增：如果存在description，也添加到metadata
+                            if 'description' in item:
+                                if not isinstance(metadata, dict):
+                                    metadata = {'source': f"{filename}_{i}"}
+                                metadata['description'] = item['description']
+                        else:
+                            print(f"⚠️ 警告: 文档 {i+1} 中没有找到concept或content字段")
+                            continue
+                        
+                        if content:
+                            files.append({
+                                "file": content,  # 保持原字段名
+                                "metadata": metadata  # 现在包含 description
+                            })
+                            print(f"✅ 文档 {i+1} 提取成功，长度: {len(content)} 字符")
+                            print(f"📋 Metadata字段: {list(metadata.keys())}")
+                        else:
+                            print(f"⚠️ 警告: 文档 {i+1} 中内容为空")
+            else:
+                print(f"❌ 错误: 文件 {filename} 格式不支持，应为dict或list")
+            
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON解析错误 {filename}: {e}")
+        except Exception as e:
+            print(f"❌ 处理文件 {filename} 时出错: {e}")
+    
+    print(f"📊 总共提取了 {len(files)} 个有效文档")
+    return files
+
+def initialize_database(start_index=0):
+    """初始化数据库 - 支持从指定索引开始上传"""
     global db_name
-    db_name = f"student_{config.USER_NAME}_final"
     
     try:
-        create_resp = requests.post(
-            f"{config.BASE_URL}/databases",
-            json={
-                "database_name": db_name,
-                "token": config.TOKEN,
-                "metric_type": config.DEFAULT_METRIC_TYPE
-            }
+        # 检查数据库是否已存在
+        check_resp = requests.get(
+            f"{config.BASE_URL}/databases/{db_name}",
+            params={"token": config.TOKEN},
+            timeout=10,
+            verify=False
         )
         
-        if create_resp.status_code != 200:
-            print(f"创建数据库失败: {create_resp.text}")
-            return False
-            
-        print(f"数据库创建成功: {db_name}")
-        
-        # 上传测试数据
-        files = [
-            {"file": "hello world, 网络安全测试", "metadata": {"description": "测试文件1"}},
-            {"file": "第二条测试文本", "metadata": {"description": "测试文件2"}},
-            {"file": "网络安全是指保护网络系统及其数据免受攻击、损坏或未经授权访问的过程。",
-                "metadata": {"description": "网络安全定义"}},
-            {"file": "防火墙是一种网络安全系统,用于监控和控制传入和传出的网络流量。",
-                "metadata": {"description": "防火墙定义"}}
-        ]
-        
-        payload = {
-            "files": files,
-            "token": config.TOKEN
-        }
-        
-        resp = requests.post(
-            f"{config.BASE_URL}/databases/{db_name}/files", json=payload)
-            
-        if resp.status_code == 200:
-            print(f"测试数据上传成功")
-            time.sleep(config.WAIT_TIME)
-            return True
+        if check_resp.status_code != 200:
+            # 创建数据库
+            create_resp = requests.post(
+                f"{config.BASE_URL}/databases",
+                json={
+                    "database_name": db_name,
+                    "token": config.TOKEN,
+                    "metric_type": config.DEFAULT_METRIC_TYPE
+                },
+                timeout=30,
+                verify=False
+            )
+            if create_resp.status_code != 200:
+                print(f"❌ 创建数据库失败: {create_resp.text}")
+                return False
+            print(f"✅ 数据库创建成功: {db_name}")
         else:
-            print(f"数据上传失败: {resp.text}")
-            return False
+            print(f"✅ 数据库 {db_name} 已存在，将直接使用")
+        
+        # 加载JSON文件
+        print("📂 开始加载JSON文件...")
+        json_files = load_json_files()
+        
+        if not json_files:
+            print("⚠️ 未找到有效的JSON文件，将使用默认测试数据")
+            # 使用默认测试数据
+            json_files = [
+                {"file": "hello world, 网络安全测试", "metadata": {"source": "测试文件1"}},
+                {"file": "第二条测试文本", "metadata": {"source": "测试文件2"}},
+                {"file": "网络安全是指保护网络系统及其数据免受攻击、损坏或未经授权访问的过程。",
+                    "metadata": {"source": "网络安全定义"}},
+                {"file": "防火墙是一种网络安全系统,用于监控和控制传入和传出的网络流量。",
+                    "metadata": {"source": "防火墙定义"}}
+            ]
+        
+        total_files = len(json_files)
+        
+        # 如果指定了起始索引，显示信息
+        if start_index > 0:
+            print(f"🔄 从第 {start_index} 个文档开始上传 (总共 {total_files} 个文档)")
+        
+        # 从指定索引开始上传
+        success_count = 0
+        
+        for i in range(start_index, total_files):
+            doc = json_files[i]
+            print(f"📤 上传文档 {i+1}/{total_files}")
             
+            payload = {"files": [doc], "token": config.TOKEN}
+            
+            try:
+                resp = requests.post(
+                    f"{config.BASE_URL}/databases/{db_name}/files", 
+                    json=payload,
+                    timeout=60,
+                    verify=False
+                )
+                
+                if resp.status_code == 200:
+                    success_count += 1
+                    print(f"✅ 文档 {i+1} 上传成功")
+                else:
+                    print(f"❌ 文档 {i+1} 上传失败: {resp.text}")
+                
+                time.sleep(1)  # 短暂休息
+                
+            except Exception as e:
+                print(f"❌ 文档 {i+1} 上传异常: {e}")
+        
+        print(f"🎉 上传完成！成功上传了 {success_count} 个文档")
+        time.sleep(config.WAIT_TIME)
+        return True
+        
     except Exception as e:
-        print(f"初始化数据库时出错: {e}")
+        print(f"❌ 初始化数据库失败: {e}")
         return False
 
 #首页路由
@@ -175,6 +333,12 @@ def chat():
     current_history = conversations[conversation_id][1]
 
     try:
+        # ========== 2.1 识别用户期望的人格 ==========
+        from prompt_builder import detect_personality
+        personality_type = detect_personality(user_input)
+        
+        # ========== 2. 检索相关文档 ==========
+        search_result = client.search(db_name, user_input)
         # 一次检索：返回 { "files": [...] } 或 { "results": [...] }
         initial_results = client.search(db_name, user_input, top_k=20)
 
@@ -195,8 +359,14 @@ def chat():
         context = extract_context({"results": reranked_results})
         citations = files_to_citations({"results": reranked_results})
         
-        # ========== 4. 构建 Prompt (不变) ==========
-        prompt = build_chat_prompt(current_history, user_input, context, citations)
+        # ========== 4. 构建包含历史的 Prompt ==========
+        prompt = build_chat_prompt(
+            history, 
+            user_input, 
+            context, 
+            citations,
+            personality_type=personality_type  # 传递人格类型
+        )
         
         # ========== 5. Prompt 安全检测 (不变) ==========
         if not validate_prompt(prompt):
@@ -245,17 +415,23 @@ def health():
 # ✅ 启动时的输出信息
 if __name__ == '__main__':
     print("\n" + "=" * 50)
-    print("⏳ 正在初始化数据库...")
+    print("⏳ 正在初始化数据库 student_Group4_final...")
     print("=" * 50 + "\n")
     
-    if initialize_database():
+    # 获取命令行参数作为起始索引
+    import sys
+    start_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+    
+    if initialize_database(start_index=start_index):
         print("\n" + "=" * 50)
         print("🚀 服务启动成功！")
         print("📱 请在浏览器访问: http://localhost:5000/")
         print("💡 提示: 按 Ctrl+C 停止服务")
+        print("📁 JSON文件目录: ./json_files/")
+        print("💡 从第230个开始: python app.py 230")
         print("=" * 50 + "\n")
         
-        app.run(host='0.0.0.0', port=5000, debug=True, use_reloader = False)
+        app.run(host='0.0.0.0', port=5000, debug=False, use_reloader = False)
     else:
         print("\n" + "=" * 50)
         print("❌ 数据库初始化失败，请检查配置")
@@ -263,4 +439,5 @@ if __name__ == '__main__':
         print("   - VECTOR_DB_BASE_URL 是否正确")
         print("   - TOKEN 是否有效")
         print("   - 向量库服务是否在运行")
+        print("   - JSON文件格式是否正确")
         print("=" * 50 + "\n")

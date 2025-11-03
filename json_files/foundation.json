@@ -1,0 +1,502 @@
+[
+  {
+    "id": 1,
+    "concept": "Firewall",
+    "description": "一种网络安全系统，用于监控和控制网络流量，基于预定规则阻止或允许数据包传输。"
+  },
+  {
+    "id": 2,
+    "concept": "Virus",
+    "description": "一种恶意软件，通过附着在合法程序上复制自身，感染系统并可能造成数据损坏或丢失。"
+  },
+  {
+    "id": 3,
+    "concept": "Worm",
+    "description": "一种独立运行的恶意软件，通过网络自我传播，消耗资源并可能导致系统瘫痪。"
+  },
+  {
+    "id": 4,
+    "concept": "Trojan Horse",
+    "description": "一种伪装成合法软件的恶意程序，诱使用户安装，从而窃取数据或控制设备。"
+  },
+  {
+    "id": 5,
+    "concept": "Ransomware",
+    "description": "一种恶意软件，加密用户文件并要求支付赎金以恢复访问，常见于网络攻击。"
+  },
+  {
+    "id": 6,
+    "concept": "Spyware",
+    "description": "一种恶意软件，秘密收集用户信息，如浏览习惯或密码，并发送给攻击者。"
+  },
+  {
+    "id": 7,
+    "concept": "Adware",
+    "description": "一种软件，自动显示广告，可能影响用户体验，并可能携带恶意代码。"
+  },
+  {
+    "id": 8,
+    "concept": "Rootkit",
+    "description": "一种隐藏自身或其他恶意软件的工具，使攻击者获得系统根权限并持久控制。"
+  },
+  {
+    "id": 9,
+    "concept": "Backdoor",
+    "description": "一种隐藏的访问通道，允许攻击者绕过正常认证机制进入系统。"
+  },
+  {
+    "id": 10,
+    "concept": "Phishing",
+    "description": "一种社交工程攻击，通过伪造邮件或网站诱骗用户提供敏感信息，如密码或信用卡号。"
+  },
+  {
+    "id": 11,
+    "concept": "Social Engineering",
+    "description": "一种非技术攻击，利用人类心理操纵用户泄露机密信息或执行危险操作。"
+  },
+  {
+    "id": 12,
+    "concept": "DDoS Attack",
+    "description": "分布式拒绝服务攻击，通过多个来源向目标发送大量流量，使其服务不可用。"
+  },
+  {
+    "id": 13,
+    "concept": "DoS Attack",
+    "description": "拒绝服务攻击，通过单一来源淹没目标资源，导致服务中断。"
+  },
+  {
+    "id": 14,
+    "concept": "Man-in-the-Middle Attack",
+    "description": "一种攻击方式，攻击者秘密拦截并可能篡改双方之间的通信。"
+  },
+  {
+    "id": 15,
+    "concept": "SQL Injection",
+    "description": "一种代码注入攻击，通过输入恶意SQL语句，操纵数据库以窃取或修改数据。"
+  },
+  {
+    "id": 16,
+    "concept": "Cross-Site Scripting (XSS)",
+    "description": "一种 web 攻击，攻击者向网页注入恶意脚本，在用户浏览器中执行以窃取信息。"
+  },
+  {
+    "id": 17,
+    "concept": "Cross-Site Request Forgery (CSRF)",
+    "description": "一种攻击，诱使用户在已认证的 web 应用中执行非预期操作，如转账或更改设置。"
+  },
+  {
+    "id": 18,
+    "concept": "Zero-Day Vulnerability",
+    "description": "一种未被发现或未修补的软件漏洞，攻击者可能利用它进行攻击，而厂商尚未发布修复。"
+  },
+  {
+    "id": 19,
+    "concept": "Vulnerability",
+    "description": "系统或软件中的弱点，可能被攻击者利用以造成损害。"
+  },
+  {
+    "id": 20,
+    "concept": "Patch",
+    "description": "软件更新，用于修复已知漏洞或改进功能，以增强安全性。"
+  },
+  {
+    "id": 21,
+    "concept": "Update",
+    "description": "对软件或系统的修改，通常包括安全修复和新特性，以保持最新状态。"
+  },
+  {
+    "id": 22,
+    "concept": "Access Control",
+    "description": "安全机制，用于限制用户或系统对资源的访问，基于身份和权限。"
+  },
+  {
+    "id": 23,
+    "concept": "Authentication",
+    "description": "验证用户或设备身份的过程，例如通过密码、生物识别或多因素认证。"
+  },
+  {
+    "id": 24,
+    "concept": "Authorization",
+    "description": "确定已验证用户有权访问哪些资源或执行哪些操作的过程。"
+  },
+  {
+    "id": 25,
+    "concept": "Audit",
+    "description": "系统性地检查安全事件和日志，以检测异常、合规性问题或改进安全措施。"
+  },
+  {
+    "id": 26,
+    "concept": "Encryption",
+    "description": "将数据转换为密文的过程，以防止未经授权的访问，只有拥有密钥者可以解密。"
+  },
+  {
+    "id": 27,
+    "concept": "Decryption",
+    "description": "将加密数据恢复为原始明文的过程，通常使用密钥。"
+  },
+  {
+    "id": 28,
+    "concept": "Symmetric Encryption",
+    "description": "一种加密方法，使用相同密钥进行加密和解密，速度快但密钥分发需安全。"
+  },
+  {
+    "id": 29,
+    "concept": "Asymmetric Encryption",
+    "description": "一种加密方法，使用公钥和私钥对，公钥加密数据，私钥解密，增强安全性。"
+  },
+  {
+    "id": 30,
+    "concept": "Public Key Infrastructure (PKI)",
+    "description": "一套系统和管理流程，用于创建、分发和管理数字证书及公钥加密。"
+  },
+  {
+    "id": 31,
+    "concept": "Digital Certificate",
+    "description": "一种电子文档，用于验证公钥所有者身份，由可信证书颁发机构签发。"
+  },
+  {
+    "id": 32,
+    "concept": "Digital Signature",
+    "description": "一种电子签名，使用加密技术验证文档或消息的真实性和完整性。"
+  },
+  {
+    "id": 33,
+    "concept": "SSL/TLS",
+    "description": "安全套接层/传输层安全协议，用于在互联网上加密通信，确保数据隐私和完整性。"
+  },
+  {
+    "id": 34,
+    "concept": "HTTPS",
+    "description": "超文本传输安全协议，结合 HTTP 和 SSL/TLS，提供加密的 web 通信。"
+  },
+  {
+    "id": 35,
+    "concept": "VPN",
+    "description": "虚拟私人网络，通过加密隧道在公共网络上创建安全连接，保护数据传输。"
+  },
+  {
+    "id": 36,
+    "concept": "IPsec",
+    "description": "互联网协议安全，一套协议用于保护 IP 通信，通过认证和加密。"
+  },
+  {
+    "id": 37,
+    "concept": "Wireless Security",
+    "description": "保护无线网络（如 Wi-Fi）的措施，包括使用 WPA2、WPA3 等加密协议。"
+  },
+  {
+    "id": 38,
+    "concept": "Bluetooth Security",
+    "description": "针对蓝牙设备的保护机制，防止未经授权的访问或 eavesdropping。"
+  },
+  {
+    "id": 39,
+    "concept": "Network Segmentation",
+    "description": "将网络分成多个子网，以限制攻击传播并提高安全性。"
+  },
+  {
+    "id": 40,
+    "concept": "DMZ",
+    "description": "非军事区，一个隔离的网络区域，用于放置面向公众的服务，以保护内部网络。"
+  },
+  {
+    "id": 41,
+    "concept": "Intrusion Detection System (IDS)",
+    "description": "监控网络或系统活动，检测潜在入侵或安全策略违规，并发出警报。"
+  },
+  {
+    "id": 42,
+    "concept": "Intrusion Prevention System (IPS)",
+    "description": "一种安全系统，不仅检测入侵，还能主动阻止或缓解攻击。"
+  },
+  {
+    "id": 43,
+    "concept": "SIEM",
+    "description": "安全信息和事件管理，集合和分析日志数据，以提供实时安全监控和事件响应。"
+  },
+  {
+    "id": 44,
+    "concept": "Antivirus Software",
+    "description": "软件设计用于检测、阻止和移除恶意软件，如病毒和蠕虫。"
+  },
+  {
+    "id": 45,
+    "concept": "Anti-Malware",
+    "description": "专门针对多种恶意软件的防护工具，包括病毒、间谍软件和勒索软件。"
+  },
+  {
+    "id": 46,
+    "concept": "Sandbox",
+    "description": "一个隔离的环境，用于安全运行可疑代码或程序，而不影响主系统。"
+  },
+  {
+    "id": 47,
+    "concept": "Honeypot",
+    "description": "一个诱饵系统，设计用来吸引攻击者，以便研究攻击行为并收集威胁情报。"
+  },
+  {
+    "id": 48,
+    "concept": "Penetration Testing",
+    "description": "模拟攻击以评估系统安全性，识别漏洞并测试防御措施的有效性。"
+  },
+  {
+    "id": 49,
+    "concept": "Vulnerability Assessment",
+    "description": "系统性地扫描和评估系统，以识别和分类安全漏洞。"
+  },
+  {
+    "id": 50,
+    "concept": "Risk Assessment",
+    "description": "过程识别、分析和评估安全风险，以确定优先级并实施控制措施。"
+  },
+  {
+    "id": 51,
+    "concept": "Security Policy",
+    "description": "一套正式规则和指南，定义组织如何管理、保护和分发信息资产。"
+  },
+  {
+    "id": 52,
+    "concept": "Incident Response",
+    "description": "计划和流程，用于处理安全事件，以最小化损害并恢复操作。"
+  },
+  {
+    "id": 53,
+    "concept": "Disaster Recovery",
+    "description": "策略和程序，用于在灾难事件后恢复 IT 系统和数据。"
+  },
+  {
+    "id": 54,
+    "concept": "Business Continuity",
+    "description": "确保组织在中断期间能继续关键操作的计划。"
+  },
+  {
+    "id": 55,
+    "concept": "Data Backup",
+    "description": "复制数据到安全位置，以防止数据丢失 due to 攻击或故障。"
+  },
+  {
+    "id": 56,
+    "concept": "Data Encryption",
+    "description": "对存储或传输的数据进行加密，以保护其机密性。"
+  },
+  {
+    "id": 57,
+    "concept": "Data Loss Prevention (DLP)",
+    "description": "技术和策略，用于防止敏感数据被未经授权传输或泄露。"
+  },
+  {
+    "id": 58,
+    "concept": "Endpoint Security",
+    "description": "保护终端设备（如电脑、手机）免受恶意软件和未经授权访问。"
+  },
+  {
+    "id": 59,
+    "concept": "Network Security",
+    "description": "保护网络基础设施和流量，防止入侵、滥用和攻击。"
+  },
+  {
+    "id": 60,
+    "concept": "Application Security",
+    "description": "在软件开发过程中集成安全措施，以防止漏洞和攻击。"
+  },
+  {
+    "id": 61,
+    "concept": "Cloud Security",
+    "description": "保护云基础架构、数据和应用程序，涉及共享责任模型。"
+  },
+  {
+    "id": 62,
+    "concept": "Mobile Security",
+    "description": "保护移动设备和应用，防止数据泄露、恶意软件和未授权访问。"
+  },
+  {
+    "id": 63,
+    "concept": "IoT Security",
+    "description": "保护物联网设备免受攻击，确保其安全连接和数据完整性。"
+  },
+  {
+    "id": 64,
+    "concept": "Physical Security",
+    "description": "保护物理资产，如服务器和数据中心，防止未授权访问和破坏。"
+  },
+  {
+    "id": 65,
+    "concept": "Biometrics",
+    "description": "使用生物特征（如指纹、面部识别）进行身份验证，增强安全性。"
+  },
+  {
+    "id": 66,
+    "concept": "Multi-Factor Authentication (MFA)",
+    "description": "使用两种或以上验证因素（如密码、手机代码）来确认身份。"
+  },
+  {
+    "id": 67,
+    "concept": "Single Sign-On (SSO)",
+    "description": "允许用户使用一组凭据登录多个应用，简化访问同时维护安全。"
+  },
+  {
+    "id": 68,
+    "concept": "Password Policy",
+    "description": "规则要求用户创建强密码并定期更换，以减少未授权访问风险。"
+  },
+  {
+    "id": 69,
+    "concept": "Principle of Least Privilege",
+    "description": "安全原则，用户或系统只获得执行任务所需的最小权限。"
+  },
+  {
+    "id": 70,
+    "concept": "Defense in Depth",
+    "description": "多层安全策略，结合多种控制措施，以提供冗余保护。"
+  },
+  {
+    "id": 71,
+    "concept": "Secure Development Lifecycle (SDLC)",
+    "description": "在软件开发生命周期中集成安全实践，从设计到部署。"
+  },
+  {
+    "id": 72,
+    "concept": "OWASP",
+    "description": "开放 Web 应用安全项目，提供资源和建议以改善 web 应用安全。"
+  },
+  {
+    "id": 73,
+    "concept": "NIST Framework",
+    "description": "美国国家标准与技术研究院的网络安全框架，帮助组织管理风险。"
+  },
+  {
+    "id": 74,
+    "concept": "ISO 27001",
+    "description": "国际信息安全管理标准，提供建立、实施和维护 ISMS 的框架。"
+  },
+  {
+    "id": 75,
+    "concept": "GDPR",
+    "description": "通用数据保护条例，欧盟法规，要求组织保护个人数据隐私和安全。"
+  },
+  {
+    "id": 76,
+    "concept": "Compliance",
+    "description": "遵守法律法规和标准，如 GDPR 或 HIPAA，以避免罚款并保护数据。"
+  },
+  {
+    "id": 77,
+    "concept": "Threat Intelligence",
+    "description": "收集和分析信息关于潜在威胁，以预测和防御攻击。"
+  },
+  {
+    "id": 78,
+    "concept": "Threat Modeling",
+    "description": "系统性地识别和评估潜在威胁，以设计有效的安全控制。"
+  },
+  {
+    "id": 79,
+    "concept": "Attack Vector",
+    "description": "攻击者利用的路径或方法，以访问系统或网络，例如通过电子邮件或漏洞。"
+  },
+  {
+    "id": 80,
+    "concept": "Attack Surface",
+    "description": "系统中可能被攻击者利用的所有入口点，减少攻击面可提高安全。"
+  },
+  {
+    "id": 81,
+    "concept": "Malicious Domain",
+    "description": "由攻击者控制的域名，用于钓鱼、恶意软件分发或其他恶意活动。"
+  },
+  {
+    "id": 82,
+    "concept": "Botnet",
+    "description": "由被感染设备组成的网络，受攻击者控制，用于发起 DDoS 攻击或发送垃圾邮件。"
+  },
+  {
+    "id": 83,
+    "concept": "Command and Control (C&C)",
+    "description": "攻击者用于控制僵尸网络的服务器，发送指令和接收数据。"
+  },
+  {
+    "id": 84,
+    "concept": "Data Breach",
+    "description": "安全事件中，敏感、受保护或机密数据被未经授权访问或泄露。"
+  },
+  {
+    "id": 85,
+    "concept": "Data Tampering",
+    "description": "未经授权修改数据，可能导致信息失真或系统故障。"
+  },
+  {
+    "id": 86,
+    "concept": "Denial of Service",
+    "description": "攻击使系统资源不可用，阻止合法用户访问服务。"
+  },
+  {
+    "id": 87,
+    "concept": "Privilege Escalation",
+    "description": "攻击者获得比授权更高的系统权限，从而执行更多恶意操作。"
+  },
+  {
+    "id": 88,
+    "concept": "Lateral Movement",
+    "description": "攻击者在网络内部移动，从一台设备到另一台，以寻找敏感数据或控制点。"
+  },
+  {
+    "id": 89,
+    "concept": "Persistence",
+    "description": "攻击者在系统中维持长期访问的能力，即使系统重启或修复。"
+  },
+  {
+    "id": 90,
+    "concept": "Data Masking",
+    "description": "隐藏敏感数据的方法，用虚假值替换真实数据，以保护隐私。"
+  },
+  {
+    "id": 91,
+    "concept": "Tokenization",
+    "description": "用唯一标识符（令牌）替换敏感数据，减少数据泄露风险。"
+  },
+  {
+    "id": 92,
+    "concept": "Hash Function",
+    "description": "将输入数据转换为固定长度字符串的算法，用于验证数据完整性。"
+  },
+  {
+    "id": 93,
+    "concept": "Salt",
+    "description": "随机数据添加到密码 before 哈希，以防御彩虹表攻击。"
+  },
+  {
+    "id": 94,
+    "concept": "Key Management",
+    "description": "安全生成、存储、分发和销毁加密密钥的过程。"
+  },
+  {
+    "id": 95,
+    "concept": "Certificate Authority (CA)",
+    "description": "可信实体，签发和管理数字证书，用于验证公钥所有权。"
+  },
+  {
+    "id": 96,
+    "concept": "Certificate Revocation List (CRL)",
+    "description": "列表包含已撤销数字证书，用于防止使用无效证书。"
+  },
+  {
+    "id": 97,
+    "concept": "OCSP",
+    "description": "在线证书状态协议，实时检查数字证书是否有效或被撤销。"
+  },
+  {
+    "id": 98,
+    "concept": "Security Headers",
+    "description": "HTTP 头，如 Content Security Policy，用于增强 web 应用安全。"
+  },
+  {
+    "id": 99,
+    "concept": "Content Security Policy (CSP)",
+    "description": "一种安全标准，帮助防止 XSS 攻击，通过限制资源加载来源。"
+  },
+  {
+    "id": 100,
+    "concept": "Same-Origin Policy",
+    "description": "浏览器安全机制，限制来自不同源的脚本访问资源，防止数据泄露。"
+  }
+]
