@@ -209,3 +209,13 @@ NameError: name 'conversations' is not defined
 2025-11-09 17:15:37,168 - root - INFO - Intent check passed for: RSA SecurID”入侵事件攻击者的身份是？...
 2025-11-09 17:15:40,050 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:15:40] "POST /chat HTTP/1.1" 200 -
 2025-11-09 17:15:40,372 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:15:40] "GET /history HTTP/1.1" 200 -
+2025-11-09 17:19:28,210 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://101.5.25.202:5000
+2025-11-09 17:19:28,211 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-09 17:19:40,971 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:19:40] "GET / HTTP/1.1" 200 -
+2025-11-09 17:19:40,991 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:19:40] "GET /history HTTP/1.1" 200 -
+2025-11-09 17:19:44,475 - root - INFO - Intent check passed for: RSA SecurID”入侵事件攻击者的身份是？...
+2025-11-09 17:19:47,089 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:19:47] "POST /chat HTTP/1.1" 200 -
+2025-11-09 17:19:47,411 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:19:47] "GET /history HTTP/1.1" 200 -
