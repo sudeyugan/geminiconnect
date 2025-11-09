@@ -96,7 +96,11 @@ def rerank_documents(query: str, documents: List[Dict], model: CrossEncoder, top
     return reranked_docs[:top_n]
 
 def load_json_files(directory='json_files'):
-    """从指定目录加载JSON文件 - 适配用户提供的格式，包含 description 字段处理"""
+    """
+    从指定目录加载所有JSON文件，并将它们统一为 {"file": ..., "metadata": ...} 格式。
+    - 适配 processed_qa_data.json ({"file": "...", "metadata": {...}})
+    - 适配 foundation.json (将 {"concept": "...", "description": "..."} 转换为统一格式)
+    """
     files = []
     print(f"🔍 正在扫描目录: {directory}")
     
@@ -117,91 +121,61 @@ def load_json_files(directory='json_files'):
             
             print(f"✅ JSON文件 {filename} 解析成功，数据类型: {type(json_data)}")
             
-            # 适配用户提供的格式：使用"file"字段而不是"content"
-            if isinstance(json_data, dict):
-                # 检查是否是单个文档格式
-                if 'concept' in json_data:
-                    content = json_data.get('concept', '')
-                    # 直接使用用户提供的metadata，如果没有则创建一个包含文件名的metadata
-                    metadata = json_data.get('metadata', {'source': filename})
-                    
-                    # ✅ 新增：将 description 添加到 metadata 中
-                    if 'description' in json_data:
-                        # 确保 metadata 是字典类型
+            # 我们只处理列表格式的JSON (foundation.json 和 processed_qa_data.json 都是列表)
+            if isinstance(json_data, list):
+                print(f"📋 文件 {filename} 包含 {len(json_data)} 个文档")
+                
+                processed_count = 0
+                for i, item in enumerate(json_data):
+                    if not isinstance(item, dict):
+                        print(f"⚠️ 警告: 文档 {i+1} 不是一个字典，跳过。")
+                        continue
+
+                    content = None
+                    metadata = None
+
+                    # 逻辑 1: 检查是否为 processed_qa_data.json 格式
+                    # ({"file": "...", "metadata": {...}})
+                    if 'file' in item and 'metadata' in item:
+                        content = item.get('file')
+                        metadata = item.get('metadata')
                         if not isinstance(metadata, dict):
-                            metadata = {'source': filename}
-                        metadata['description'] = json_data['description']
+                            metadata = {} # 确保 metadata 是字典
+                        if 'source' not in metadata:
+                            metadata['source'] = f"{filename}_{i}"
+                        
+                    # 逻辑 2: 检查是否为 foundation.json 格式
+                    # ({"concept": "...", "description": "..."})
+                    elif 'concept' in item and 'description' in item:
+                        content = item.get('description') # 描述是内容
+                        metadata = {
+                            'source': f"{filename}_{i}",
+                            'concept': item.get('concept'), # 概念是元数据
+                        }
+                        if 'id' in item: # 也把id加入元数据
+                            metadata['id'] = item.get('id')
                     
-                    if content:
+                    # 逻辑 3: (兼容旧的 'content' 键)
+                    elif 'content' in item:
+                        content = item.get('content')
+                        metadata = item.get('metadata', {'source': f"{filename}_{i}"})
+
+                    # 处理提取结果
+                    if content and metadata is not None:
                         files.append({
-                            "file": content,  # 保持原字段名
-                            "metadata": metadata  # 现在包含 description
-                        })
-                        print(f"✅ 成功提取内容，长度: {len(content)} 字符")
-                        print(f"📋 Metadata字段: {list(metadata.keys())}")
-                    else:
-                        print(f"⚠️ 警告: 文件 {filename} 中没有找到concept字段或内容为空")
-                # 检查是否是传统格式（兼容性）
-                elif 'content' in json_data:
-                    content = json_data.get('content', '')
-                    metadata = json_data.get('metadata', {'source': filename})
-                    
-                    # ✅ 新增：如果存在description，也添加到metadata
-                    if 'description' in json_data:
-                        if not isinstance(metadata, dict):
-                            metadata = {'source': filename}
-                        metadata['description'] = json_data['description']
-                    
-                    if content:
-                        files.append({
-                            "file": content,  # 转换为统一格式
+                            "file": str(content).strip(), # 确保是字符串
                             "metadata": metadata
                         })
-                        print(f"✅ 成功提取内容（传统格式），长度: {len(content)} 字符")
+                        processed_count += 1
                     else:
-                        print(f"⚠️ 警告: 文件 {filename} 中没有找到content字段或内容为空")
-                else:
-                    print(f"❌ 错误: 文件 {filename} 格式不支持，未找到concept或content字段")
-                    
-            elif isinstance(json_data, list):
-                print(f"📋 文件 {filename} 包含 {len(json_data)} 个文档")
-                for i, item in enumerate(json_data):
-                    if isinstance(item, dict):
-                        # 优先使用concept字段
-                        if 'concept' in item:
-                            content = item.get('concept', '')
-                            metadata = item.get('metadata', {'source': f"{filename}_{i}"})
-                            
-                            # ✅ 新增：将 description 添加到 metadata 中
-                            if 'description' in item:
-                                if not isinstance(metadata, dict):
-                                    metadata = {'source': f"{filename}_{i}"}
-                                metadata['description'] = item['description']
-                        elif 'content' in item:
-                            content = item.get('content', '')
-                            metadata = item.get('metadata', {'source': f"{filename}_{i}"})
-                            
-                            # ✅ 新增：如果存在description，也添加到metadata
-                            if 'description' in item:
-                                if not isinstance(metadata, dict):
-                                    metadata = {'source': f"{filename}_{i}"}
-                                metadata['description'] = item['description']
-                        else:
-                            print(f"⚠️ 警告: 文档 {i+1} 中没有找到concept或content字段")
-                            continue
-                        
-                        if content:
-                            files.append({
-                                "file": content,  # 保持原字段名
-                                "metadata": metadata  # 现在包含 description
-                            })
-                            print(f"✅ 文档 {i+1} 提取成功，长度: {len(content)} 字符")
-                            print(f"📋 Metadata字段: {list(metadata.keys())}")
-                        else:
-                            print(f"⚠️ 警告: 文档 {i+1} 中内容为空")
-            else:
-                print(f"❌ 错误: 文件 {filename} 格式不支持，应为dict或list")
+                        print(f"⚠️ 警告: 文档 {i+1} 格式无法识别 (缺少 'file'/'metadata' 或 'concept'/'description')，已跳过。")
+                
+                print(f"✅ 文件 {filename} 处理完毕。成功提取 {processed_count} / {len(json_data)} 个文档。")
             
+            else:
+                # 移除了对单个 dict 格式的支持，以简化逻辑
+                print(f"⚠️ 警告: 文件 {filename} 不是列表(List)格式，将跳过。")
+        
         except json.JSONDecodeError as e:
             print(f"❌ JSON解析错误 {filename}: {e}")
         except Exception as e:
@@ -242,10 +216,9 @@ def initialize_database(start_index=0):
         else:
             print(f"✅ 数据库 {db_name} 已存在，将直接使用")
         
-        # 加载JSON文件
-        print("📂 开始加载JSON文件...")
-        json_files = load_json_files()
-        
+            print("📂 开始加载 'json_files' 目录...")
+            json_files = load_json_files()
+            
         if not json_files:
             print("⚠️ 未找到有效的JSON文件，将使用默认测试数据")
             # 使用默认测试数据
