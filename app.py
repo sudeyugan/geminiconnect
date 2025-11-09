@@ -54,39 +54,6 @@ INTENT_CLASSIFICATION_PROMPT = """
 分类 (仅回答 'benign' 或 'malicious'):
 """
 
-# --- 新增 ---: 封装二次检索逻辑的辅助函数
-def rerank_documents(query: str, documents: List[Dict], model: CrossEncoder, top_n: int = 5) -> List[Dict]:
-    """
-    使用 Cross-Encoder 模型对检索到的文档进行重新排序。
-    """
-    if not documents or not isinstance(documents, list) or not model:
-        return documents[:top_n] if isinstance(documents, list) else []
-
-    pairs = []
-    for doc in documents:
-        if isinstance(doc, dict):
-            text = doc.get('file_content') or doc.get('file') or doc.get('content') or ''
-        else:
-            text = str(doc or '')
-        pairs.append([query, text])
-    
-    # 模型预测，获取相关性分数
-    scores = model.predict(pairs, show_progress_bar=False)
-    
-    # 将分数与原始文档绑定并排序
-    combined_results = []
-    for i in range(len(documents)):
-        combined_results.append({
-            'score': scores[i],
-            'document': documents[i] 
-        })
-    combined_results.sort(key=lambda x: x['score'], reverse=True)
-    
-    # 提取排序后的前 N 个文档
-    reranked_docs = [res['document'] for res in combined_results]
-    
-    return reranked_docs[:top_n]
-
 def load_json_files(directory='json_files'):
     """
     从指定目录加载所有JSON文件，并将它们统一为 {"file": ..., "metadata": ...} 格式。
