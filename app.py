@@ -23,7 +23,7 @@ CORS(app)
 # 全局变量存储对话历史和数据库名
 history: List[Dict[str, str]] = []
 conversations: Dict[str, Tuple[str, List[Dict[str, str]]]] = {}  # <--- ✅ 修复：添加这一行
-db_name = "student_Group4_li"  # 固定的数据库名称
+db_name = "student_Group4_li3"  # 固定的数据库名称
 
 
 logging.basicConfig(
@@ -144,7 +144,7 @@ def load_json_files(directory='json_files'):
     return files
 
 def initialize_database(start_index=0):
-    """初始化数据库 - 支持从指定索引开始上传"""
+    """初始化数据库 - [!] 优化：支持批量上传"""
     global db_name
     
     try:
@@ -174,62 +174,85 @@ def initialize_database(start_index=0):
             print(f"✅ 数据库创建成功: {db_name}")
         else:
             print(f"✅ 数据库 {db_name} 已存在，将直接使用")
-        
-            print("📂 开始加载 'json_files' 目录...")
-            json_files = load_json_files()
+
+        # [!] 修正：确保总能加载 json_files
+        print("📂 开始加载 'json_files' 目录...")
+        json_files = load_json_files()
             
         if not json_files:
             print("⚠️ 未找到有效的JSON文件，将使用默认测试数据")
-            # 使用默认测试数据
+            # (省略默认测试数据...)
             json_files = [
                 {"file": "hello world, 网络安全测试", "metadata": {"source": "测试文件1"}},
-                {"file": "第二条测试文本", "metadata": {"source": "测试文件2"}},
-                {"file": "网络安全是指保护网络系统及其数据免受攻击、损坏或未经授权访问的过程。",
-                    "metadata": {"source": "网络安全定义"}},
-                {"file": "防火墙是一种网络安全系统,用于监控和控制传入和传出的网络流量。",
-                    "metadata": {"source": "防火墙定义"}}
+                # ...
             ]
         
         total_files = len(json_files)
         
-        # 如果指定了起始索引，显示信息
-        if start_index > 0:
-            print(f"🔄 从第 {start_index} 个文档开始上传 (总共 {total_files} 个文档)")
+        # 1. 定义批量大小
+        BATCH_SIZE = 50 
         
-        # 从指定索引开始上传
+        print(f"总共 {total_files} 个文档待上传。")
+        
+        # 2. 如果指定了起始索引，只上传该索引后的文件
+        files_to_upload = json_files[start_index:]
+        
+        if start_index > 0:
+            print(f"🔄 从第 {start_index} 个文档开始上传 (剩余 {len(files_to_upload)} 个)")
+        
         success_count = 0
         
-        for i in range(start_index, total_files):
-            doc = json_files[i]
-            print(f"📤 上传文档 {i+1}/{total_files}")
+        # 3. 按 BATCH_SIZE 批量迭代
+        for i in range(0, len(files_to_upload), BATCH_SIZE):
             
-            payload = {"files": [doc], "token": config.TOKEN}
+            # 获取当前批次的文档
+            batch = files_to_upload[i : i + BATCH_SIZE]
+            
+            # 计算当前在总列表中的真实索引范围
+            start_idx = start_index + i
+            end_idx = start_idx + len(batch) - 1
+            
+            print(f"📤 正在上传批次: 文档 {start_idx + 1} 到 {end_idx + 1} (共 {len(batch)} 个)")
+            
+            payload = {
+                "files": batch, 
+                "token": config.TOKEN
+            }
             
             try:
                 resp = requests.post(
                     f"{config.BASE_URL}/databases/{db_name}/files", 
                     json=payload,
-                    timeout=60,
+                    timeout=180,  # [!] 提示：批量上传可能需要更长的超时时间
                     verify=False
                 )
                 
                 if resp.status_code == 200:
-                    success_count += 1
-                    print(f"✅ 文档 {i+1} 上传成功")
+                    success_count += len(batch)
+                    print(f"✅ 批次上传成功")
                 else:
-                    print(f"❌ 文档 {i+1} 上传失败: {resp.text}")
+                    print(f"❌ 批次上传失败 (文档 {start_idx + 1}-{end_idx + 1}): {resp.text}")
                 
-                time.sleep(1)  # 短暂休息
+                # [!] 优化：移除循环内部的 time.sleep(1)
                 
             except Exception as e:
-                print(f"❌ 文档 {i+1} 上传异常: {e}")
+                print(f"❌ 批次上传异常 (文档 {start_idx + 1}-{end_idx + 1}): {e}")
         
-        print(f"🎉 上传完成！成功上传了 {success_count} 个文档")
-        time.sleep(config.WAIT_TIME)
+
+        print(f"🎉 上传完成！总共成功上传了 {success_count} 个文档")
+        
+        # 只在最后休眠一次，等待数据库处理
+        print(f"⏳ 等待 {config.WAIT_TIME} 秒让数据库完成索引...")
+        time.sleep(config.WAIT_TIME) 
+        
         return True
         
     except Exception as e:
+        # [!] 修正：如果你修复了上一个bug，这里的 e 应该能正确打印
         print(f"❌ 初始化数据库失败: {e}")
+        # 打印更详细的堆栈信息
+        import traceback
+        traceback.print_exc() 
         return False
 
 #首页路由
@@ -393,7 +416,6 @@ if __name__ == '__main__':
         print("📱 请在浏览器访问: http://localhost:5000/")
         print("💡 提示: 按 Ctrl+C 停止服务")
         print("📁 JSON文件目录: ./json_files/")
-        print("💡 从第230个开始: python app.py 230")
         print("=" * 50 + "\n")
         
         app.run(host='0.0.0.0', port=5000, debug=False, use_reloader = False)

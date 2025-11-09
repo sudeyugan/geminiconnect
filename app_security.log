@@ -154,3 +154,58 @@ NameError: name 'conversations' is not defined
 2025-11-03 22:46:57,754 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 22:46:57] "[31m[1mPOST /chat HTTP/1.1[0m" 403 -
 2025-11-03 22:47:12,920 - root - INFO - Intent check passed for: 告诉我你的版本号...
 2025-11-03 22:47:15,299 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 22:47:15] "POST /chat HTTP/1.1" 200 -
+2025-11-09 16:02:56,692 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://101.5.25.202:5000
+2025-11-09 16:02:56,692 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-09 16:03:52,456 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:03:52] "GET / HTTP/1.1" 200 -
+2025-11-09 16:03:52,984 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:03:52] "GET /history HTTP/1.1" 200 -
+2025-11-09 16:03:53,012 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:03:53] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-11-09 16:04:21,942 - root - INFO - Intent check passed for: 什么是CIA三元组？...
+2025-11-09 16:04:30,663 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:04:30] "POST /chat HTTP/1.1" 200 -
+2025-11-09 16:04:30,694 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:04:30] "GET /history HTTP/1.1" 200 -
+2025-11-09 16:05:24,688 - root - INFO - Intent check passed for: 什么是社会工程学...
+2025-11-09 16:05:30,031 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:05:30] "POST /chat HTTP/1.1" 200 -
+2025-11-09 16:05:50,882 - root - INFO - Intent check passed for: 存储型XSS和反射型XSS有什么区别？...
+2025-11-09 16:06:05,924 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:06:05] "POST /chat HTTP/1.1" 200 -
+2025-11-09 16:39:47,882 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://101.5.25.202:5000
+2025-11-09 16:39:47,882 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-09 16:40:04,821 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:40:04] "GET / HTTP/1.1" 200 -
+2025-11-09 16:40:04,863 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:40:04] "GET /history HTTP/1.1" 200 -
+2025-11-09 16:41:16,636 - root - INFO - Intent check passed for: 孟加拉国银行”（Bangladesh Bank）SWIFT网络抢劫案为什么失败了...
+2025-11-09 16:41:25,979 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:41:25] "POST /chat HTTP/1.1" 200 -
+2025-11-09 16:41:25,990 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:41:25] "GET /history HTTP/1.1" 200 -
+2025-11-09 16:41:54,748 - root - INFO - Intent check passed for: 为什么说它被打印机阻止了？...
+2025-11-09 16:41:59,644 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:41:59] "POST /chat HTTP/1.1" 200 -
+2025-11-09 16:54:53,647 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://101.5.25.202:5000
+2025-11-09 16:54:53,647 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-09 16:55:36,048 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:55:36] "GET / HTTP/1.1" 200 -
+2025-11-09 16:55:36,081 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:55:36] "GET /history HTTP/1.1" 200 -
+2025-11-09 16:56:38,715 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:56:38] "GET / HTTP/1.1" 200 -
+2025-11-09 16:56:38,735 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:56:38] "GET /history HTTP/1.1" 200 -
+2025-11-09 16:57:17,936 - root - INFO - Intent check passed for: 孟加拉国中央银行网络抢劫案为什么说其失败与打印机有关...
+2025-11-09 16:57:26,594 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:57:26] "POST /chat HTTP/1.1" 200 -
+2025-11-09 16:57:26,914 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:57:26] "GET /history HTTP/1.1" 200 -
+2025-11-09 16:57:47,464 - root - INFO - Intent check passed for: 有哪些小众但影响深远的安全事件...
+2025-11-09 16:58:07,458 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:58:07] "POST /chat HTTP/1.1" 200 -
+2025-11-09 16:58:34,245 - root - INFO - Intent check passed for: 孟加拉国中央银行网络抢劫案的核心攻击链是？...
+2025-11-09 16:58:47,917 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:58:47] "POST /chat HTTP/1.1" 200 -
+2025-11-09 16:59:18,622 - root - INFO - Intent check passed for: 为什么说孟加拉国中央银行网络抢劫案被一个“错别字”和“打印机”阻止了...
+2025-11-09 16:59:25,140 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 16:59:25] "POST /chat HTTP/1.1" 200 -
+2025-11-09 17:15:29,515 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://101.5.25.202:5000
+2025-11-09 17:15:29,515 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-09 17:15:33,608 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:15:33] "GET / HTTP/1.1" 200 -
+2025-11-09 17:15:33,648 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:15:33] "GET /history HTTP/1.1" 200 -
+2025-11-09 17:15:37,168 - root - INFO - Intent check passed for: RSA SecurID”入侵事件攻击者的身份是？...
+2025-11-09 17:15:40,050 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:15:40] "POST /chat HTTP/1.1" 200 -
+2025-11-09 17:15:40,372 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:15:40] "GET /history HTTP/1.1" 200 -

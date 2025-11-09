@@ -1,5 +1,6 @@
 import json
 import re
+import textwrap
 
 # 输入文件现在是 .txt 文件
 INPUT_FILE = "QA_DATA.txt"
@@ -59,17 +60,36 @@ def convert_qa_data_robustly():
                 print(f"    - 未在 '{current_topic}' 下找到任何 *完整* 的Q&A对。")
                 continue
                 
-            # 6. 将找到的 Q&A 对转换为 RAG 格式
-            for question, answer in matches:
-                entry = {
-                    "file": answer.strip(),  # 答案
-                    "metadata": {
-                        "source": "manual_qa_txt",
-                        "topic": current_topic,
-                        "question": question.strip() # 问题
-                    }
+        # 6. 将找到的 Q&A 对转换为 RAG 格式
+        for question, answer in matches:
+
+            # --- [!] 核心修正：清理文本 ---
+
+            # 2.1 移除首尾的空白 (如 \n)
+            cleaned_answer = answer.strip()
+
+            # 2.2 移除可能残留的 """ 或 "
+            if cleaned_answer.startswith(('"""', '"')):
+                cleaned_answer = cleaned_answer.strip('"""').strip('"')
+
+            # 2.3 [关键] 移除所有行共有的缩进
+            cleaned_answer = textwrap.dedent(cleaned_answer)
+
+            # 2.4 再次清理，确保首尾没有空白
+            cleaned_answer = cleaned_answer.strip()
+
+            # 同样清理一下问题
+            cleaned_question = textwrap.dedent(question.strip()).strip()
+
+            entry = {
+                "file": cleaned_answer,  # <--- 使用清理后的答案
+                "metadata": {
+                    "source": "manual_qa_txt",
+                    "topic": current_topic,
+                    "question": cleaned_question # <--- 使用清理后的问题
                 }
-                rag_corpus.append(entry)
+            }
+            rag_corpus.append(entry)
             
             print(f"    - 成功找到 {len(matches)} 个Q&A对。")
 

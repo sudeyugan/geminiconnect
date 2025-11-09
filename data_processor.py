@@ -1,6 +1,7 @@
 from typing import List, Dict, Tuple
 from config import config
 
+
 def extract_context(search_results: Dict, max_length: int = None) -> str:
     """
     从 search 结果中提取上下文，控制总长度
