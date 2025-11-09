@@ -11,7 +11,6 @@ import requests
 from typing import List, Dict, Tuple
 import logging
 import uuid
-from sentence_transformers import CrossEncoder
 import json
 import os
 import urllib3
@@ -26,13 +25,6 @@ history: List[Dict[str, str]] = []
 conversations: Dict[str, Tuple[str, List[Dict[str, str]]]] = {}  # <--- ✅ 修复：添加这一行
 db_name = "student_Group4_li"  # 固定的数据库名称
 
-print("⏳ 正在加载二次检索模型 (Re-ranker)...")
-try:
-    reranker_model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
-    print("✅ 二次检索模型加载成功!")
-except Exception as e:
-    print(f"❌ 加载二次检索模型失败: {e}")
-    reranker_model = None
 
 logging.basicConfig(
     level=logging.INFO,  # 设置日志级别为 INFO。DEBUG日志将不显示，INFO, WARNING, ERROR 都会记录。
@@ -355,27 +347,16 @@ def chat():
         personality_type = detect_personality(user_input)
         
         # ========== 2. 检索相关文档 ==========
-        search_result = client.search(db_name, user_input)
-        # 一次检索：返回 { "files": [...] } 或 { "results": [...] }
-        initial_results = client.search(db_name, user_input, top_k=20)
+        # 注意：我们不再需要 search_result 这一行，因为下一行做了同样的事
+        # search_result = client.search(db_name, user_input) # <--- 可以删除这一行
 
-        # 提取出文档列表（兼容 'files' 或 'results'）
-        initial_docs = initial_results.get('files', initial_results.get('results', []))
-        
-        # ========== 新增步骤: 2.5 二次检索 (Re-ranking) ==========
-        # --- 新增 ---: 使用 rerank_documents 函数对初步结果进行精排。
-        reranked_results = rerank_documents(
-            query=user_input, 
-            documents=initial_docs, 
-            model=reranker_model, 
-            top_n=5  # 最终选择最相关的 5 个文档
-        )
+        # 一次检索：直接获取最终需要的 top_k 数量 (例如 5)
+        initial_results = client.search(db_name, user_input, top_k=5) # [!code ++]
         
         # ========== 3. 提取上下文和引用 ==========
-         # 用二次检索后的结果构建上下文与引用（包一层保持原接口期望的字典结构）
-        context = extract_context({"results": reranked_results})
-        citations = files_to_citations({"results": reranked_results})
-        
+        # 直接使用 initial_results (它就是 search_results 字典)
+        context = extract_context(initial_results) # [!code ++]
+        citations = files_to_citations(initial_results) # [!code ++]
         # ========== 4. 构建包含历史的 Prompt ==========
         prompt = build_chat_prompt(
             history, 
