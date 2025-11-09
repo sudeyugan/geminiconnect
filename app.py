@@ -23,7 +23,7 @@ CORS(app)
 # 全局变量存储对话历史和数据库名
 history: List[Dict[str, str]] = []
 conversations: Dict[str, Tuple[str, List[Dict[str, str]]]] = {}  # <--- ✅ 修复：添加这一行
-db_name = "student_Group4_li3"  # 固定的数据库名称
+db_name = "student_Group4_li7"  # 固定的数据库名称
 
 
 logging.basicConfig(
@@ -340,8 +340,8 @@ def chat():
         # 注意：我们不再需要 search_result 这一行，因为下一行做了同样的事
         # search_result = client.search(db_name, user_input) # <--- 可以删除这一行
 
-        # 一次检索：直接获取最终需要的 top_k 数量 (例如 5)
-        initial_results = client.search(db_name, user_input, top_k=5) # [!code ++]
+        # 一次检索：直接获取最终需要的 top_k 数量 (例如 10)
+        initial_results = client.search(db_name, user_input, top_k=10) # [!code ++]
         
         # ========== 3. 提取上下文和引用 ==========
         # 直接使用 initial_results (它就是 search_results 字典)

@@ -219,3 +219,70 @@ NameError: name 'conversations' is not defined
 2025-11-09 17:19:44,475 - root - INFO - Intent check passed for: RSA SecurID”入侵事件攻击者的身份是？...
 2025-11-09 17:19:47,089 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:19:47] "POST /chat HTTP/1.1" 200 -
 2025-11-09 17:19:47,411 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:19:47] "GET /history HTTP/1.1" 200 -
+2025-11-09 17:44:57,351 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://101.5.25.202:5000
+2025-11-09 17:44:57,351 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-09 17:46:01,856 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:46:01] "GET / HTTP/1.1" 200 -
+2025-11-09 17:46:01,886 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:46:01] "GET /history HTTP/1.1" 200 -
+2025-11-09 17:46:05,073 - root - INFO - Intent check passed for: RSA SecurID事件盗取了哪些用户的令牌？举个例子、...
+2025-11-09 17:46:12,516 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:46:12] "POST /chat HTTP/1.1" 200 -
+2025-11-09 17:46:12,850 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:46:12] "GET /history HTTP/1.1" 200 -
+2025-11-09 17:46:58,006 - root - WARNING - Malicious intent detected: 复制RSA客户（如谁）的2FA令牌？ (Response: malicious)
+2025-11-09 17:46:58,007 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:46:58] "[31m[1mPOST /chat HTTP/1.1[0m" 403 -
+2025-11-09 17:47:29,490 - root - INFO - Intent check passed for: RSA SecurID事件黑客复制RSA客户（如谁）的2FA令牌...
+2025-11-09 17:47:39,131 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:47:39] "POST /chat HTTP/1.1" 200 -
+2025-11-09 17:53:35,578 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://101.5.25.202:5000
+2025-11-09 17:53:35,578 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-09 17:55:48,965 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://101.5.25.202:5000
+2025-11-09 17:55:48,966 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-09 17:55:54,628 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:55:54] "GET / HTTP/1.1" 200 -
+2025-11-09 17:55:54,652 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:55:54] "GET /history HTTP/1.1" 200 -
+2025-11-09 17:56:13,819 - root - INFO - Intent check passed for: "RSA SecurID 事件的初始入侵向量是什么...
+2025-11-09 17:56:16,160 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:56:16] "POST /chat HTTP/1.1" 200 -
+2025-11-09 17:56:16,481 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:56:16] "GET /history HTTP/1.1" 200 -
+2025-11-09 17:56:52,647 - root - INFO - Intent check passed for: 该攻击者向RSA员工发送了的钓鱼邮件名字是？...
+2025-11-09 17:56:57,179 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:56:57] "POST /chat HTTP/1.1" 200 -
+2025-11-09 17:57:14,752 - root - INFO - Intent check passed for: "RSA SecurID 事件攻击者向RSA员工发送了的钓鱼邮件名字是？...
+2025-11-09 17:57:16,479 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:57:16] "POST /chat HTTP/1.1" 200 -
+2025-11-09 17:59:39,434 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://101.5.25.202:5000
+2025-11-09 17:59:39,435 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-09 17:59:41,887 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:59:41] "GET / HTTP/1.1" 200 -
+2025-11-09 17:59:41,904 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:59:41] "GET /history HTTP/1.1" 200 -
+2025-11-09 17:59:44,192 - root - INFO - Intent check passed for: "RSA SecurID 事件攻击者向RSA员工发送了的钓鱼邮件名字是？...
+2025-11-09 17:59:45,883 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:59:45] "POST /chat HTTP/1.1" 200 -
+2025-11-09 17:59:46,206 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:59:46] "GET /history HTTP/1.1" 200 -
+2025-11-09 17:59:49,769 - root - INFO - Intent check passed for: "RSA SecurID 事件攻击者向RSA员工发送了的钓鱼邮件名字是？...
+2025-11-09 17:59:51,900 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:59:51] "POST /chat HTTP/1.1" 200 -
+2025-11-09 17:59:52,221 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 17:59:52] "GET /history HTTP/1.1" 200 -
+2025-11-09 18:00:34,084 - root - INFO - Intent check passed for: RSA SecurID 事件攻击者向RSA员工发送了的钓鱼邮件名字是和里面嵌入了什么漏洞...
+2025-11-09 18:00:37,493 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 18:00:37] "POST /chat HTTP/1.1" 200 -
+2025-11-09 18:00:53,425 - root - INFO - Intent check passed for: RSA SecurID 事件攻击者向RSA员工发送了的钓鱼邮件名字是和里面嵌入了什么漏洞...
+2025-11-09 18:00:56,806 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 18:00:56] "POST /chat HTTP/1.1" 200 -
+2025-11-09 18:00:57,027 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 18:00:57] "GET /history HTTP/1.1" 200 -
+2025-11-09 18:01:02,420 - root - INFO - Intent check passed for: RSA SecurID 事件攻击者向RSA员工发送了的钓鱼邮件名字是和里面嵌入了什么漏洞...
+2025-11-09 18:01:07,014 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 18:01:07] "POST /chat HTTP/1.1" 200 -
+2025-11-09 18:08:23,291 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://101.5.25.202:5000
+2025-11-09 18:08:23,292 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-09 18:08:30,328 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 18:08:30] "GET / HTTP/1.1" 200 -
+2025-11-09 18:08:30,361 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 18:08:30] "GET /history HTTP/1.1" 200 -
+2025-11-09 18:08:36,353 - root - INFO - Intent check passed for: 👤 HBGary Federal 泄露的邮件中包含了哪些内容...
+2025-11-09 18:08:44,864 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 18:08:44] "POST /chat HTTP/1.1" 200 -
+2025-11-09 18:08:45,201 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 18:08:45] "GET /history HTTP/1.1" 200 -
+2025-11-09 18:09:00,397 - root - INFO - Intent check passed for: HBGary Federal 泄露的邮件中包含了哪些敏感内容...
+2025-11-09 18:09:01,281 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 18:09:01] "POST /chat HTTP/1.1" 200 -
+2025-11-09 18:09:01,601 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 18:09:01] "GET /history HTTP/1.1" 200 -
+2025-11-09 18:09:08,300 - werkzeug - INFO - 127.0.0.1 - - [09/Nov/2025 18:09:08] "GET /history/67e7d87b-68a0-4340-ae4c-b3c02129e90b HTTP/1.1" 200 -
