@@ -24,7 +24,7 @@ CORS(app)
 # 全局变量存储对话历史和数据库名
 history: List[Dict[str, str]] = []
 conversations: Dict[str, Tuple[str, List[Dict[str, str]]]] = {}  # <--- ✅ 修复：添加这一行
-db_name = "student_Group4_final"  # 固定的数据库名称
+db_name = "student_Group4_li"  # 固定的数据库名称
 
 print("⏳ 正在加载二次检索模型 (Re-ranker)...")
 try:
