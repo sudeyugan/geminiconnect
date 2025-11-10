@@ -14,17 +14,22 @@ import uuid
 import json
 import os
 import urllib3
+import concurrent.futures
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 CORS(app)
 
+#并行上传
+BATCH_SIZE = 50           # batch量
+MAX_WORKERS = 4            # 并发数
+REQUEST_TIMEOUT = 300      # 超时时间
+
 # 全局变量存储对话历史和数据库名
 history: List[Dict[str, str]] = []
 conversations: Dict[str, Tuple[str, List[Dict[str, str]]]] = {}  # <--- ✅ 修复：添加这一行
-db_name = "student_Group4_li7"  # 固定的数据库名称
-
+db_name = "student_Group4_llll"  # 固定的数据库名称
 
 logging.basicConfig(
     level=logging.INFO,  # 设置日志级别为 INFO。DEBUG日志将不显示，INFO, WARNING, ERROR 都会记录。
@@ -56,9 +61,11 @@ INTENT_CLASSIFICATION_PROMPT = """
 
 def load_json_files(directory='json_files'):
     """
-    从指定目录加载所有JSON文件，并将它们统一为 {"file": ..., "metadata": ...} 格式。
-    - 适配 processed_qa_data.json ({"file": "...", "metadata": {...}})
-    - 适配 foundation.json (将 {"concept": "...", "description": "..."} 转换为统一格式)
+    从指定目录加载JSON文件
+    支持多种格式：
+    1. CQA三元组格式 (context, question, answer) - 新增支持
+    2. concept格式 (原有格式)
+    3. content格式 (原有格式)
     """
     files = []
     print(f"🔍 正在扫描目录: {directory}")
@@ -80,181 +87,286 @@ def load_json_files(directory='json_files'):
             
             print(f"✅ JSON文件 {filename} 解析成功，数据类型: {type(json_data)}")
             
-            # 我们只处理列表格式的JSON (foundation.json 和 processed_qa_data.json 都是列表)
-            if isinstance(json_data, list):
-                print(f"📋 文件 {filename} 包含 {len(json_data)} 个文档")
+            # 处理单个条目的通用函数
+            def process_item(item, source_name):
+                """
+                处理单个JSON条目，支持多种格式
+                返回：成功处理的文档数量
+                """
+                docs_added = 0
                 
-                processed_count = 0
-                for i, item in enumerate(json_data):
-                    if not isinstance(item, dict):
-                        print(f"⚠️ 警告: 文档 {i+1} 不是一个字典，跳过。")
-                        continue
-
-                    content = None
-                    metadata = None
-
-                    # 逻辑 1: 检查是否为 processed_qa_data.json 格式
-                    # ({"file": "...", "metadata": {...}})
-                    if 'file' in item and 'metadata' in item:
-                        content = item.get('file')
-                        metadata = item.get('metadata')
-                        if not isinstance(metadata, dict):
-                            metadata = {} # 确保 metadata 是字典
-                        if 'source' not in metadata:
-                            metadata['source'] = f"{filename}_{i}"
-                        
-                    # 逻辑 2: 检查是否为 foundation.json 格式
-                    # ({"concept": "...", "description": "..."})
-                    elif 'concept' in item and 'description' in item:
-                        content = item.get('description') # 描述是内容
-                        metadata = {
-                            'source': f"{filename}_{i}",
-                            'concept': item.get('concept'), # 概念是元数据
-                        }
-                        if 'id' in item: # 也把id加入元数据
-                            metadata['id'] = item.get('id')
+                # ========== 格式1: CQA三元组 (优先处理) ==========
+                if all(k in item for k in ['context', 'question', 'answer']):
+                    context = item.get('context', '').strip()
+                    question = item.get('question', '').strip()
+                    answer = item.get('answer', '').strip()
                     
-                    # 逻辑 3: (兼容旧的 'content' 键)
-                    elif 'content' in item:
-                        content = item.get('content')
-                        metadata = item.get('metadata', {'source': f"{filename}_{i}"})
+                    if not (context and question and answer):
+                        print(f"⚠️ {source_name}: CQA字段存在但内容为空，已跳过")
+                        return 0
+                    
+                    # 策略1: 完整的CQA文档
+                    full_content = f"""【背景知识】
+{context}
 
-                    # 处理提取结果
-                    if content and metadata is not None:
+【相关问题】
+{question}
+
+【参考答案】
+{answer}"""
+                    
+                    files.append({
+                        "file": full_content,
+                        "metadata": {
+                            "source": source_name,
+                            "type": "full_cqa",
+                            "context": context,
+                            "question": question,
+                            "answer": answer
+                        }
+                    })
+                    docs_added += 1
+                    
+                    # 策略2: Context + Question (更容易匹配问题)
+                    cq_content = f"""问题：{question}
+
+相关背景：{context}"""
+                    
+                    files.append({
+                        "file": cq_content,
+                        "metadata": {
+                            "source": f"{source_name}_cq",
+                            "type": "context_question",
+                            "full_answer": answer
+                        }
+                    })
+                    docs_added += 1
+                    
+                    # 策略3: Question + Answer (QA对匹配)
+                    qa_content = f"""Q: {question}
+
+A: {answer}"""
+                    
+                    files.append({
+                        "file": qa_content,
+                        "metadata": {
+                            "source": f"{source_name}_qa",
+                            "type": "question_answer",
+                            "full_context": context
+                        }
+                    })
+                    docs_added += 1
+                    
+                    print(f"✅ [CQA格式] {source_name}: 生成 {docs_added} 个文档")
+                    return docs_added
+                
+                # ========== 格式2: concept格式 (原有格式) ==========
+                elif 'concept' in item:
+                    content = item.get('concept', '').strip()
+                    metadata = item.get('metadata', {'source': source_name})
+                    
+                    if 'description' in item:
+                        if not isinstance(metadata, dict):
+                            metadata = {'source': source_name}
+                        metadata['description'] = item['description']
+                    
+                    if content:
                         files.append({
-                            "file": str(content).strip(), # 确保是字符串
+                            "file": content,
                             "metadata": metadata
                         })
-                        processed_count += 1
+                        print(f"✅ [concept格式] {source_name}: 长度 {len(content)} 字符")
+                        return 1
                     else:
-                        print(f"⚠️ 警告: 文档 {i+1} 格式无法识别 (缺少 'file'/'metadata' 或 'concept'/'description')，已跳过。")
+                        print(f"⚠️ {source_name}: concept字段为空")
+                        return 0
                 
-                print(f"✅ 文件 {filename} 处理完毕。成功提取 {processed_count} / {len(json_data)} 个文档。")
+                # ========== 格式3: content格式 (原有格式) ==========
+                elif 'content' in item:
+                    content = item.get('content', '').strip()
+                    metadata = item.get('metadata', {'source': source_name})
+                    
+                    if 'description' in item:
+                        if not isinstance(metadata, dict):
+                            metadata = {'source': source_name}
+                        metadata['description'] = item['description']
+                    
+                    if content:
+                        files.append({
+                            "file": content,
+                            "metadata": metadata
+                        })
+                        print(f"✅ [content格式] {source_name}: 长度 {len(content)} 字符")
+                        return 1
+                    else:
+                        print(f"⚠️ {source_name}: content字段为空")
+                        return 0
+                
+                # ========== 不支持的格式 ==========
+                else:
+                    print(f"❌ {source_name}: 不支持的格式，需要 context/question/answer 或 concept 或 content 字段")
+                    return 0
             
+            # 处理JSON数据（可能是单个对象或列表）
+            total_docs = 0
+            
+            if isinstance(json_data, dict):
+                # 单个文档
+                total_docs = process_item(json_data, filename)
+                
+            elif isinstance(json_data, list):
+                # 文档列表
+                print(f"📋 文件 {filename} 包含 {len(json_data)} 个条目")
+                for i, item in enumerate(json_data):
+                    if isinstance(item, dict):
+                        source_id = f"{filename}_item{i+1}"
+                        total_docs += process_item(item, source_id)
+                    else:
+                        print(f"⚠️ 第 {i+1} 个元素不是字典，已跳过")
             else:
-                # 移除了对单个 dict 格式的支持，以简化逻辑
-                print(f"⚠️ 警告: 文件 {filename} 不是列表(List)格式，将跳过。")
-        
+                print(f"❌ 文件 {filename} 格式不支持，应为字典或列表")
+            
+            print(f"📊 {filename} 共生成 {total_docs} 个可检索文档")
+            
         except json.JSONDecodeError as e:
             print(f"❌ JSON解析错误 {filename}: {e}")
         except Exception as e:
             print(f"❌ 处理文件 {filename} 时出错: {e}")
+            import traceback
+            traceback.print_exc()
     
-    print(f"📊 总共提取了 {len(files)} 个有效文档")
+    print(f"\n🎉 总共提取了 {len(files)} 个有效文档")
+    
+    # 统计不同类型的文档
+    if files:
+        type_counts = {}
+        for doc in files:
+            doc_type = doc['metadata'].get('type', 'unknown')
+            type_counts[doc_type] = type_counts.get(doc_type, 0) + 1
+        
+        print("\n📈 文档类型分布:")
+        for doc_type, count in type_counts.items():
+            print(f"  - {doc_type}: {count}")
+    
     return files
 
-def initialize_database(start_index=0):
-    """初始化数据库 - [!] 优化：支持批量上传"""
-    global db_name
+# --- 3. 新增：上传单个批次的辅助函数 ---
+def upload_batch(session, batch_data, batch_index, start_offset):
+    """
+    负责上传单个批次的函数，专为多线程设计。
+    """
+    # 计算在原始文件列表中的绝对索引
+    start_idx = start_offset + (batch_index * BATCH_SIZE)
+    end_idx = start_idx + len(batch_data) - 1
+    
+    print(f"📤 [线程] 开始上传批次 {batch_index + 1} (文档 {start_idx + 1} - {end_idx + 1})")
+    
+    payload = {
+        "files": batch_data,
+        "token": config.TOKEN
+    }
     
     try:
-        # 检查数据库是否已存在
-        check_resp = requests.get(
-            f"{config.BASE_URL}/databases/{db_name}",
-            params={"token": config.TOKEN},
-            timeout=10,
+        resp = session.post(
+            f"{config.BASE_URL}/databases/{db_name}/files", 
+            json=payload,
+            timeout=REQUEST_TIMEOUT,
             verify=False
         )
         
-        if check_resp.status_code != 200:
-            # 创建数据库
-            create_resp = requests.post(
-                f"{config.BASE_URL}/databases",
-                json={
-                    "database_name": db_name,
-                    "token": config.TOKEN,
-                    "metric_type": config.DEFAULT_METRIC_TYPE
-                },
-                timeout=30,
+        if resp.status_code == 200:
+            print(f"✅ [线程] 批次 {batch_index + 1} 上传成功")
+            return len(batch_data) # 返回成功上传的数量
+        else:
+            print(f"❌ [线程] 批次 {batch_index + 1} 上传失败: {resp.status_code} {resp.text}")
+            return 0
+            
+    except Exception as e:
+        print(f"❌ [线程] 批次 {batch_index + 1} 上传异常: {e}")
+        return 0
+
+
+def initialize_database(start_index=0):
+    """初始化数据库 - [!] 已优化为并发批量上传"""
+    global db_name
+    
+    # 使用 Session 对象进行连接复用
+    with requests.Session() as session:
+        # 1. 数据库检查和创建
+        try:
+            check_resp = session.get(
+                f"{config.BASE_URL}/databases/{db_name}",
+                params={"token": config.TOKEN},
+                timeout=10,
                 verify=False
             )
-            if create_resp.status_code != 200:
-                print(f"❌ 创建数据库失败: {create_resp.text}")
-                return False
-            print(f"✅ 数据库创建成功: {db_name}")
-        else:
-            print(f"✅ 数据库 {db_name} 已存在，将直接使用")
-
-        # [!] 修正：确保总能加载 json_files
-        print("📂 开始加载 'json_files' 目录...")
-        json_files = load_json_files()
-            
-        if not json_files:
-            print("⚠️ 未找到有效的JSON文件，将使用默认测试数据")
-            # (省略默认测试数据...)
-            json_files = [
-                {"file": "hello world, 网络安全测试", "metadata": {"source": "测试文件1"}},
-                # ...
-            ]
-        
-        total_files = len(json_files)
-        
-        # 1. 定义批量大小
-        BATCH_SIZE = 50 
-        
-        print(f"总共 {total_files} 个文档待上传。")
-        
-        # 2. 如果指定了起始索引，只上传该索引后的文件
-        files_to_upload = json_files[start_index:]
-        
-        if start_index > 0:
-            print(f"🔄 从第 {start_index} 个文档开始上传 (剩余 {len(files_to_upload)} 个)")
-        
-        success_count = 0
-        
-        # 3. 按 BATCH_SIZE 批量迭代
-        for i in range(0, len(files_to_upload), BATCH_SIZE):
-            
-            # 获取当前批次的文档
-            batch = files_to_upload[i : i + BATCH_SIZE]
-            
-            # 计算当前在总列表中的真实索引范围
-            start_idx = start_index + i
-            end_idx = start_idx + len(batch) - 1
-            
-            print(f"📤 正在上传批次: 文档 {start_idx + 1} 到 {end_idx + 1} (共 {len(batch)} 个)")
-            
-            payload = {
-                "files": batch, 
-                "token": config.TOKEN
-            }
-            
-            try:
-                resp = requests.post(
-                    f"{config.BASE_URL}/databases/{db_name}/files", 
-                    json=payload,
-                    timeout=180,  # [!] 提示：批量上传可能需要更长的超时时间
+            if check_resp.status_code != 200:
+                create_resp = session.post(
+                    f"{config.BASE_URL}/databases",
+                    json={
+                        "database_name": db_name,
+                        "token": config.TOKEN,
+                        "metric_type": config.DEFAULT_METRIC_TYPE
+                    },
+                    timeout=30,
                     verify=False
                 )
-                
-                if resp.status_code == 200:
-                    success_count += len(batch)
-                    print(f"✅ 批次上传成功")
-                else:
-                    print(f"❌ 批次上传失败 (文档 {start_idx + 1}-{end_idx + 1}): {resp.text}")
-                
-                # [!] 优化：移除循环内部的 time.sleep(1)
-                
-            except Exception as e:
-                print(f"❌ 批次上传异常 (文档 {start_idx + 1}-{end_idx + 1}): {e}")
-        
+                if create_resp.status_code != 200:
+                    print(f"❌ 创建数据库失败: {create_resp.text}")
+                    return False
+                print(f"✅ 数据库创建成功: {db_name}")
+            else:
+                print(f"✅ 数据库 {db_name} 已存在，将直接使用")
+        except Exception as e:
+            print(f"❌ 数据库检查/创建时发生错误: {e}")
+            return False
 
-        print(f"🎉 上传完成！总共成功上传了 {success_count} 个文档")
+        # 2. 加载文件并创建批次
+        print("📂 开始加载 'json_files' 目录...")
+        json_files = load_json_files()
         
-        # 只在最后休眠一次，等待数据库处理
+        if not json_files:
+            print("⚠️ 未找到有效的JSON文件，上传中止。")
+            return False # 如果没有文件，就没必要继续了
+        
+        files_to_upload = json_files[start_index:]
+        total_to_upload = len(files_to_upload)
+        
+        if total_to_upload == 0:
+            print("✅ 没有需要上传的新文件 (start_index 设置为 %d)。" % start_index)
+            return True
+            
+        print(f"总共 {total_to_upload} 个文档待上传。将以 {BATCH_SIZE} 为批次大小，{MAX_WORKERS} 个线程并发上传。")
+        
+        # 将所有待上传文件切分成多个批次
+        batches = [files_to_upload[i : i + BATCH_SIZE] for i in range(0, total_to_upload, BATCH_SIZE)]
+        
+        total_success_count = 0
+        
+        # 3. 使用线程池并发执行上传任务
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            future_to_batch = {
+                # 提交任务，并传入 session, batch数据, 批次索引, 和起始偏移量
+                executor.submit(upload_batch, session, batch, i, start_index): i 
+                for i, batch in enumerate(batches)
+            }
+            
+            for future in concurrent.futures.as_completed(future_to_batch):
+                try:
+                    count = future.result()
+                    total_success_count += count
+                except Exception as exc:
+                    batch_index = future_to_batch[future]
+                    print(f'❌ 批次 {batch_index + 1} 执行时生成了异常: {exc}')
+
+    print("-" * 30)
+    print(f"🎉 上传完成！总共成功上传了 {total_success_count} / {total_to_upload} 个文档")
+    
+    if total_success_count > 0:
         print(f"⏳ 等待 {config.WAIT_TIME} 秒让数据库完成索引...")
         time.sleep(config.WAIT_TIME) 
-        
-        return True
-        
-    except Exception as e:
-        # [!] 修正：如果你修复了上一个bug，这里的 e 应该能正确打印
-        print(f"❌ 初始化数据库失败: {e}")
-        # 打印更详细的堆栈信息
-        import traceback
-        traceback.print_exc() 
-        return False
-
+    
+    return total_success_count == total_to_upload
 #首页路由
 @app.route('/')
 def index():
@@ -281,7 +393,7 @@ def get_conversation_history(conversation_id):
 # 聊天核心路由
 @app.route('/chat', methods=['POST'])
 def chat():
-    """处理聊天请求 - 集成了二次检索功能"""
+    """处理聊天请求 - 集成了两阶段检索功能"""
     
     # ========== 1. 接收和验证输入 (不变) ==========
     data = request.get_json(silent=True) or {}
@@ -332,52 +444,82 @@ def chat():
     current_history = conversations[conversation_id][1]
 
     try:
-        # ========== 2.1 识别用户期望的人格 ==========
+        # ========== 2. 识别用户期望的人格 ==========
         from prompt_builder import detect_personality
         personality_type = detect_personality(user_input)
         
-        # ========== 2. 检索相关文档 ==========
-        # 注意：我们不再需要 search_result 这一行，因为下一行做了同样的事
-        # search_result = client.search(db_name, user_input) # <--- 可以删除这一行
-
-        # 一次检索：直接获取最终需要的 top_k 数量 (例如 10)
-        initial_results = client.search(db_name, user_input, top_k=10) # [!code ++]
+        # ========== 3. 【第一阶段】初步检索和生成草稿答案 ==========
+        print("🚀 [Phase 1] Performing initial search...")
+        # 3.1 使用用户原始问题进行第一次检索
+        initial_search_result = client.search(db_name, user_input, top_k=3) # 初步检索3个文档
+        initial_docs = initial_search_result.get('files', initial_search_result.get('results', []))
         
-        # ========== 3. 提取上下文和引用 ==========
-        # 直接使用 initial_results (它就是 search_results 字典)
-        context = extract_context(initial_results) # [!code ++]
-        citations = files_to_citations(initial_results) # [!code ++]
-        # ========== 4. 构建包含历史的 Prompt ==========
-        prompt = build_chat_prompt(
-            history, 
+        # 3.2 基于初步文档，生成一个“草稿”答案
+        if initial_docs:
+            initial_context = extract_context({"results": initial_docs})
+            # 构建一个简单的、无历史记录的prompt来生成草稿
+            draft_prompt = build_chat_prompt([], user_input, initial_context, [])
+            print("📝 [Phase 1] Generating draft answer...")
+            draft_answer = client.dialogue(draft_prompt)
+        else:
+            # 如果第一步没搜到任何东西，直接用用户问题进行下一步
+            draft_answer = user_input
+            print("⚠️ [Phase 1] No documents found, using user input as draft.")
+
+        # ========== 4. 【第二阶段】优化检索和生成最终答案 ==========
+        print(f"🚀 [Phase 2] Performing refined search with draft: {draft_answer[:50]}...")
+        # 4.1 使用“草稿”答案作为新查询进行第二次检索，获取更相关的文档
+        refined_search_result = client.search(db_name, draft_answer, top_k=5) # 第二次检索5个文档
+        refined_docs = refined_search_result.get('files', refined_search_result.get('results', []))
+        
+        # 4.2 合并两次检索的结果，并去重
+        all_docs = initial_docs + refined_docs
+        # 使用文档内容的哈希或元数据中的唯一ID来去重
+        unique_docs_map = {doc.get('metadata', {}).get('source', doc.get('file')): doc for doc in reversed(all_docs)}
+        final_docs = list(unique_docs_map.values())
+        print(f"📚 Combined and deduplicated documents: {len(initial_docs)} + {len(refined_docs)} -> {len(final_docs)} unique docs.")
+
+        # 4.3 提取最终的上下文和引用
+        final_context = extract_context({"results": final_docs})
+        final_citations = files_to_citations({"results": final_docs})
+        
+        # 4.4 构建包含完整历史记录和最终上下文的Prompt
+        final_prompt = build_chat_prompt(
+            current_history, # 使用完整的对话历史
             user_input, 
-            context, 
-            citations,
-            personality_type=personality_type  # 传递人格类型
+            final_context, 
+            final_citations,
+            personality_type=personality_type
         )
         
-        # ========== 5. Prompt 安全检测 (不变) ==========
-        if not validate_prompt(prompt):
+        print("\n" + "="*80)
+        print("🔍 [DEBUG] 最终发送给LLM的完整Prompt:")
+        print("="*80)
+        print(final_prompt)
+        print("="*80 + "\n")
+
+         # ========== 5. Prompt 安全检测 (不变) ==========
+        if not validate_prompt(final_prompt):
             return jsonify({'error': '生成的提示词存在安全风险'}), 400
         
-        # ========== 6. 生成回答 (不变) ==========
-        response = client.dialogue(prompt)
+        # ========== 6. 生成最终回答 ==========
+        print("✅ [Phase 2] Generating final answer...")
+        final_response = client.dialogue(final_prompt)
         
         # ========== 7. 更新对话历史 (不变) ==========
         current_history.append({"role": "user", "content": user_input})
-        current_history.append({"role": "assistant", "content": response})
+        current_history.append({"role": "assistant", "content": final_response})
         
         # ========== 8. 准备响应数据 (不变) ==========
         response_data = {
-            'response': response,
-            'citations': citations,
+            'response': final_response,
             'conversation_id': conversation_id
         }
         
         # ========== 9. 可选：回答质量评估 (不变) ==========
         if enable_evaluation:
             _, evaluation_report = integrate_with_rag_flow(
-                response, user_input, context
+                final_response, user_input, final_context
             )
             response_data['evaluation'] = evaluation_report
         
@@ -406,25 +548,16 @@ if __name__ == '__main__':
     print("⏳ 正在初始化数据库 student_Group4_final...")
     print("=" * 50 + "\n")
     
-    # 获取命令行参数作为起始索引
     import sys
     start_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+
+    initialize_database(start_index=start_index)
+    print("\n" + "=" * 50)
+    print("🚀 服务启动成功！")
+    print("📱 请在浏览器访问: http://localhost:5000/")
+    print("💡 提示: 按 Ctrl+C 停止服务")
+    print("📁 JSON文件目录: ./json_files/")
+    print("💡 从第230个开始: python app.py 230")
+    print("=" * 50 + "\n")
     
-    if initialize_database(start_index=start_index):
-        print("\n" + "=" * 50)
-        print("🚀 服务启动成功！")
-        print("📱 请在浏览器访问: http://localhost:5000/")
-        print("💡 提示: 按 Ctrl+C 停止服务")
-        print("📁 JSON文件目录: ./json_files/")
-        print("=" * 50 + "\n")
-        
-        app.run(host='0.0.0.0', port=5000, debug=False, use_reloader = False)
-    else:
-        print("\n" + "=" * 50)
-        print("❌ 数据库初始化失败，请检查配置")
-        print("💡 检查项:")
-        print("   - VECTOR_DB_BASE_URL 是否正确")
-        print("   - TOKEN 是否有效")
-        print("   - 向量库服务是否在运行")
-        print("   - JSON文件格式是否正确")
-        print("=" * 50 + "\n")
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)

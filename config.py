@@ -7,7 +7,7 @@ class Config(NamedTuple):
     TOKEN: str = os.getenv("TOKEN", "_QZ9BtHUWrgT8BrO4ihZFAPJpzju8PBnFG_VbGJUGDYSBkOEztl8FqxafKhh-Prb")
     DEFAULT_METRIC_TYPE: str = "cosine"
     MAX_CONTEXT_LENGTH: int = 2000  # 检索结果最大上下文长度
-    TOP_K: int = 10                # 默认返回 top_k 个结果
+    TOP_K: int = 3                # 默认返回 top_k 个结果
     WAIT_TIME: int = 2            # 等待向量库flush的时间
 
 class PersonalityConfig:

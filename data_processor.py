@@ -1,7 +1,6 @@
 from typing import List, Dict, Tuple
 from config import config
 
-
 def extract_context(search_results: Dict, max_length: int = None) -> str:
     """
     从 search 结果中提取上下文，控制总长度
@@ -18,7 +17,22 @@ def extract_context(search_results: Dict, max_length: int = None) -> str:
     items = search_results.get("results", search_results.get("files", []))
 
     for item in items:
-        content = (item.get("file_content") or item.get("file") or item.get("content") or "")
+        # --- ✅ 核心修改在这里 ---
+        # 1. 优先检查是否存在 'payload' 字段
+        payload = item.get("payload", {})
+        
+        # 2. 从 payload 或顶层对象中依次尝试获取内容
+        content = (
+            item.get("text") or
+            payload.get("file") or 
+            payload.get("content") or
+            item.get("file_content") or 
+            item.get("file") or 
+            item.get("content") or 
+            ""
+        )
+        # -------------------------
+
         if total_len + len(content) > max_length:
             break
         contexts.append(content)

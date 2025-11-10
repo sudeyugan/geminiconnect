@@ -1,19 +1,23 @@
+# 文件名: process_CQA_data.py (v4 - 移除 metadata)
+
 import json
 import re
 import textwrap
 
-# 输入文件现在是 .txt 文件
+# 输入文件 (包含 CQA 三元组)
 INPUT_FILE = "QA_DATA.txt"
-# 输出文件保持不变
-OUTPUT_FILE = "processed_qa_data.json"
+# 输出文件 (处理后的JSON语料库)
+OUTPUT_FILE = "processed_cqa_corpus.json"
 
-def convert_qa_data_robustly():
+def convert_cqa_data_robustly():
     """
     使用正则表达式 robustly（健壮地）处理 QA_DATA.txt 文件，
-    将其转换为RAG所需的JSON列表格式。
-    这个版本可以容忍文件末尾的语法错误或不完整条目。
+    将其从 (Context, Question, Answer) 三元组格式
+    转换为 RAG 语料库所需的JSON列表格式。
+    
+    [!] 更新 v4: 此版本只输出 {context, question, answer}，移除了 metadata。
     """
-    print(f"开始健壮地处理: {INPUT_FILE}")
+    print(f"--- 开始处理CQA三元组 (无 metadata, 清理全角括号): {INPUT_FILE} ---")
     
     try:
         with open(INPUT_FILE, 'r', encoding='utf-8') as f:
@@ -24,19 +28,16 @@ def convert_qa_data_robustly():
 
     rag_corpus = []
     
-    # 1. 定义用于查找 Q&A 对的正则表达式
-    # re.DOTALL 标志允许 '.' 匹配换行符，这对于多行答案至关重要
-    qa_pair_regex = re.compile(
-        r'\(\s*"(.+?)"\s*,\s*"(.+?)"\s*\)', 
+    # 1. 定义用于查找 C-Q-A 三元组的正则表达式
+    cqa_triplet_regex = re.compile(
+        r'\(\s*"(.+?)"\s*,\s*"(.+?)"\s*,\s*"(.+?)"\s*\)', 
         re.DOTALL
     )
     
     # 2. 定义用于按主题分割文件的正则表达式
-    # 这将匹配 "主题名": [ 并捕获 "主题名"
     topic_splitter = re.compile(r'"([^"]+)":\s*\[')
     
     # 3. 按主题分割文件
-    # 这将产生一个列表，格式为: [文件头部杂项, '主题1', 'Q&A块1', '主题2', 'Q&A块2', ...]
     parts = topic_splitter.split(file_content)
     
     if len(parts) <= 1:
@@ -44,70 +45,67 @@ def convert_qa_data_robustly():
         return
 
     # 4. 遍历分割后的部分
-    # 我们跳过列表中的第一项（文件头部杂项）
-    # 每次跳 2 步：parts[i] 是主题名, parts[i+1] 是包含Q&A的文本块
+    total_found = 0
     for i in range(1, len(parts), 2):
         if i + 1 < len(parts):
             current_topic = parts[i].strip()
-            qa_block = parts[i+1]
+            cqa_block = parts[i+1]
             
             print(f"  > 正在查找主题: '{current_topic}'")
             
-            # 5. 在当前主题的文本块中查找所有匹配的 Q&A 对
-            matches = qa_pair_regex.findall(qa_block)
+            # 5. 在当前主题的文本块中查找所有匹配的 C-Q-A 三元组
+            matches = cqa_triplet_regex.findall(cqa_block)
             
             if not matches:
-                print(f"    - 未在 '{current_topic}' 下找到任何 *完整* 的Q&A对。")
+                print(f"    - 未在 '{current_topic}' 下找到任何 *完整* 的 CQA 三元组。")
                 continue
-                
-        # 6. 将找到的 Q&A 对转换为 RAG 格式
-        for question, answer in matches:
-
-            # --- [!] 核心修正：清理文本 ---
-
-            # 2.1 移除首尾的空白 (如 \n)
-            cleaned_answer = answer.strip()
-
-            # 2.2 移除可能残留的 """ 或 "
-            if cleaned_answer.startswith(('"""', '"')):
-                cleaned_answer = cleaned_answer.strip('"""').strip('"')
-
-            # 2.3 [关键] 移除所有行共有的缩进
-            cleaned_answer = textwrap.dedent(cleaned_answer)
-
-            # 2.4 再次清理，确保首尾没有空白
-            cleaned_answer = cleaned_answer.strip()
-
-            # 同样清理一下问题
-            cleaned_question = textwrap.dedent(question.strip()).strip()
-
-            entry = {
-                "file": cleaned_answer,  # <--- 使用清理后的答案
-                "metadata": {
-                    "source": "manual_qa_txt",
-                    "topic": current_topic,
-                    "question": cleaned_question # <--- 使用清理后的问题
-                }
-            }
-            rag_corpus.append(entry)
             
-            print(f"    - 成功找到 {len(matches)} 个Q&A对。")
+            print(f"    - 成功找到 {len(matches)} 个 CQA 三元组。")
+            total_found += len(matches)
+            
+            # 6. 将找到的 C-Q-A 对转换为 RAG 格式
+            for context, question, answer in matches:
+
+                def clean_text(text):
+                    cleaned = text.strip()
+                    if cleaned.startswith(('"""', '"')):
+                        cleaned = cleaned.strip('"""').strip('"')
+                    cleaned = textwrap.dedent(cleaned)
+                    
+                    # --- [!] 核心修正：移除所有全角括号及其内容 ---
+                    cleaned = re.sub(r'（.*?）', '', cleaned)
+                    
+                    cleaned = cleaned.strip()
+                    return cleaned
+
+                cleaned_context = clean_text(context)
+                cleaned_question = clean_text(question)
+                cleaned_answer = clean_text(answer)
+
+                # 7. [!] 构建新的 JSON 条目 (无 metadata)
+                entry = {
+                    "context": cleaned_context,
+                    "question": cleaned_question,
+                    "answer": cleaned_answer
+                }
+                rag_corpus.append(entry)
 
     if not rag_corpus:
-        print("错误: 未能从文件中解析出任何完整的Q&A对。")
+        print("错误: 未能从文件中解析出任何完整的 CQA 三元组。")
         return
 
-    # 7. 保存为新的JSON文件
+    # 8. 保存为新的JSON文件
     try:
         with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
             json.dump(rag_corpus, f, indent=2, ensure_ascii=False)
         
         print(f"\n--- 转换成功! ---")
-        print(f"总共处理了 {len(rag_corpus)} 条 Q&A 对。")
+        print(f"总共处理了 {total_found} 条 CQA 三元组。")
         print(f"已保存到: {OUTPUT_FILE}")
+        print(f"输出格式: {{context, question, answer}} (无 metadata)")
         
     except Exception as e:
         print(f"保存到 {OUTPUT_FILE} 时出错: {e}")
 
 if __name__ == "__main__":
-    convert_qa_data_robustly()
+    convert_cqa_data_robustly()

@@ -72,9 +72,6 @@ def build_chat_prompt(
 【参考上下文】
 {context}
 
-【参考文献】
-{citation_text}
-
 请回答：
 """
     return final_prompt
